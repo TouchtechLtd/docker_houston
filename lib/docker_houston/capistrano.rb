@@ -62,13 +62,9 @@ namespace :docker do
   task :setup_env do
     on roles :app do
       env_file = "#{fetch(:shared_dir)}/.env"
-      p env_file
       unless test "[ -f #{env_file} ]"
-        p "Making new .env file"
         require 'securerandom'
         execute :echo, "'VIRTUAL_HOST=#{fetch(:app_domain)}\nSECRET_KEY_BASE=#{SecureRandom.hex(64)}' > #{env_file}"
-      else
-        p ".env exists"
       end
     end
   end
