@@ -2,6 +2,9 @@ version: '2'
 services: 
   db:
     image: postgres
+    environment: &db
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
   web:
     build: .
     ports:
