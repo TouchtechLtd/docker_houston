@@ -64,7 +64,7 @@ namespace :docker do
       env_file = "#{fetch(:shared_dir)}/.env"
       unless test "[ -f #{env_file} ]"
         require 'securerandom'
-        execute :echo, "'VIRTUAL_HOST=#{fetch(:app_domain)}\nSECRET_KEY_BASE=#{SecureRandom.hex(64)}' > #{env_file}"
+        execute :echo, "'RAILS_ENV=#{fetch(:rails_env)}\nVIRTUAL_HOST=#{fetch(:app_domain)}\nSECRET_KEY_BASE=#{SecureRandom.hex(64)}' > #{env_file}"
       end
     end
   end
