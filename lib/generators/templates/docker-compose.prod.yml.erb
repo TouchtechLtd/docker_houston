@@ -1,0 +1,12 @@
+version: '2'
+services:
+  db:
+    volumes:
+      - /home/deploy/db/data:/var/lib/postgresql/data
+  web:
+    volumes:
+      - /home/deploy/dockerised_apps/nginx-proxy/assets/<%= app_domain %>/public:/app/public/
+      - /home/deploy/dockerised_apps/logs/deploybot/:/app/log/
+      - /home/deploy/dockerised_apps/logs/deploybot/unicorn:/var/log/
+    env_file: ../../shared/.env
+    command: ./bin/docker

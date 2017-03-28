@@ -21,7 +21,7 @@ def exec_on_remote(command, message="Executing command on remote...", container_
   on roles :app do |server|
     ssh_cmd = "ssh -A -t #{server.user}@#{server.hostname}"
     puts message
-    exec "#{ssh_cmd} 'cd #{fetch(:release_dir)} && docker-compose -p #{fetch(:app_with_stage)} run web #{command}'"
+    exec "#{ssh_cmd} 'cd #{fetch(:release_dir)} && docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p #{fetch(:app_with_stage)} run web #{command}'"
   end
 end
 
@@ -48,7 +48,7 @@ namespace :docker do
   task :lift_off do
     on roles :app do
       invoke 'deploy'
-      invoke 'docker:setup_db'
+      invoke 'docker:setup_env'
       invoke 'docker:build_container'
       invoke 'docker:stop'
       invoke 'docker:start'
@@ -58,12 +58,17 @@ namespace :docker do
     end
   end
 
-  desc 'relink docker database'
-  task :setup_db do
+  desc 'Setup Environment file'
+  task :setup_env do
     on roles :app do
-      docker_db = "#{fetch(:release_dir)}/config/database.yml.docker"
-      if test "[ -f #{docker_db} ]"
-        execute :cp, "#{docker_db} #{docker_db.chomp('.docker')}"
+      env_file = "#{fetch(:shared_dir)}/.env"
+      p env_file
+      unless test "[ -f #{env_file} ]"
+        p "Making new .env file"
+        require 'securerandom'
+        execute :echo, "'VIRTUAL_HOST=#{fetch(:app_domain)}\nSECRET_KEY_BASE=#{SecureRandom.hex(64)}' > #{env_file}"
+      else
+        p ".env exists"
       end
     end
   end
@@ -72,7 +77,7 @@ namespace :docker do
   task :build_container do
     on roles :app do
       within fetch(:release_dir) do
-        execute "cd #{fetch(:release_dir)} && docker-compose -p #{fetch(:app_with_stage)} build web"
+        execute "cd #{fetch(:release_dir)} && docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p #{fetch(:app_with_stage)} build web"
       end
     end
   end
@@ -81,7 +86,7 @@ namespace :docker do
   task :start do
     on roles :app do
       within fetch(:release_dir) do
-        execute "cd #{fetch(:release_dir)} && docker-compose -p #{fetch(:app_with_stage)} up -d"
+        execute "cd #{fetch(:release_dir)} && docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p #{fetch(:app_with_stage)} up -d"
       end
     end
   end
@@ -90,8 +95,8 @@ namespace :docker do
   task :stop do
     on roles :app do
       within fetch(:release_dir) do
-        execute "cd #{fetch(:release_dir)} && docker-compose -p #{fetch(:app_with_stage)} kill" # kill the running containers
-        execute "cd #{fetch(:release_dir)} && docker-compose -p #{fetch(:app_with_stage)} rm --force"
+        execute "cd #{fetch(:release_dir)} && docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p #{fetch(:app_with_stage)} kill" # kill the running containers
+        execute "cd #{fetch(:release_dir)} && docker-compose -f docker-compose.yml -f docker-compose.prod.yml -p #{fetch(:app_with_stage)} rm --force"
       end
     end
   end

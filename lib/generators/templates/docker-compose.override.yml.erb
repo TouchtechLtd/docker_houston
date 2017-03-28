@@ -1,0 +1,9 @@
+version: '2'
+services: 
+  db:
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+  web:
+    volumes:
+      - .:/app
+    env_file: .env
