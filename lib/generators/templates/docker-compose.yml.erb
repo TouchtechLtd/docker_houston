@@ -2,13 +2,15 @@ version: '2'
 services: 
   db:
     image: postgres
+    ports:
+      - 5432
     environment: &db
       POSTGRES_USER: docker
       POSTGRES_PASSWORD: docker
   web:
     build: .
     ports:
-      - "3000:3000"
+      - 3000
     depends_on:
       - db
     command: bundle exec rails server -b 0.0.0.0 --pid /tmp/server.pid
